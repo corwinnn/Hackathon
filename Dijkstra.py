@@ -73,7 +73,7 @@ class Dijkstra:
 
         return graph
 
-    def get_dist(self, point, another_point, cur_time=12 * 60):
+    def _get_dist(self, point, another_point, cur_time=12 * 60):
         dijk_d = dijkstra.DijkstraSPF(self.d_graph, point)
         dijk_ft = dijkstra.DijkstraSPF(self.full_t_graph, point)
         dijk_ht = dijkstra.DijkstraSPF(self.half_t_graph, point)
@@ -84,7 +84,7 @@ class Dijkstra:
             timie = dijk_ft.get_distance(another_point)
         return (dijk_d.get_distance(another_point), timie)
 
-    def get_full_path(self, point, another_point, cur_time=12 * 60):
+    def _get_full_path(self, point, another_point, cur_time=12 * 60):
         dijk_d = dijkstra.DijkstraSPF(self.d_graph, point)
         dijk_ft = dijkstra.DijkstraSPF(self.full_t_graph, point)
         dijk_ht = dijkstra.DijkstraSPF(self.half_t_graph, point)
@@ -95,8 +95,37 @@ class Dijkstra:
             timie = dijk_ft.get_path(another_point)
         return (dijk_d.get_path(another_point), timie)
 
+    def get_nearest_point(self, point):
+        # TODO Add bin. search optimisation with edges sort
+        cur_min = 10 ** 9 + 1
+        cur_p = -1
+        for i in self.edges:
+            d = self.distance(point, i)
+            t = d
+            if d < cur_min:
+                cur_min = d
+                cur_p = i
+        return cur_p, t, d
+
+    def get_dist(self, point, another_point, cur_time=12 * 60):
+        if point in self.mapa:
+            return self._get_dist(point, another_point, cur_time)
+        else:
+            po, t, d = self.get_nearest_point(point)
+            ans1, ans2 = self._get_dist(po, another_point, cur_time)
+            return ans1 + d, ans2 + t
+
+    def get_full_path(self, point, another_point, cur_time=12 * 60):
+        if point in self.mapa:
+            return self._get_full_path(point, another_point, cur_time)
+        else:
+            po, t, d = self.get_nearest_point(point)
+            ans1 = self._get_full_path(po, another_point, cur_time)
+            return [point] + ans1[0], [point] + ans1[1]
+
 
 some = Dijkstra()
 
-print(some.get_full_path(some.reverse_mapa[0], some.reverse_mapa[2]))
-print(some.get_dist(some.reverse_mapa[0], some.reverse_mapa[2]))
+print(some.get_full_path((49.7996, 22.95196), some.reverse_mapa[2]))
+print(some.get_full_path((49.7994, 22.95196), some.reverse_mapa[2]))
+print(some.get_dist((49.7994, 22.95196), some.reverse_mapa[2]))
