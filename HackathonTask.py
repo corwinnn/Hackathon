@@ -30,6 +30,8 @@ def rider_class(rider, thr1=0.28, thr2=0.17, thr3=0.23):
 
 def get_long_dists(drivers):
     dists = np.zeros(drivers.shape[0], dtype='int')
+    cx = orders.dropoff_lat.mean()
+    cy = orders.dropoff_lon.mean()
     for i, row in drivers.iterrows():
         x = float(row['lat'])
         y = float(row['lon'])
