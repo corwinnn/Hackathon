@@ -84,7 +84,19 @@ class Dijkstra:
             timie = dijk_ft.get_distance(another_point)
         return (dijk_d.get_distance(another_point), timie)
 
+    def get_full_path(self, point, another_point, cur_time=12 * 60):
+        dijk_d = dijkstra.DijkstraSPF(self.d_graph, point)
+        dijk_ft = dijkstra.DijkstraSPF(self.full_t_graph, point)
+        dijk_ht = dijkstra.DijkstraSPF(self.half_t_graph, point)
+        timie = 0
+        if cur_time < 8 * 60 or cur_time > 20 * 60:
+            timie = dijk_ht.get_path(another_point)
+        else:
+            timie = dijk_ft.get_path(another_point)
+        return (dijk_d.get_path(another_point), timie)
+
 
 some = Dijkstra()
 
-print(some.get_dist(some.reverse_mapa[0], some.reverse_mapa[7]))
+print(some.get_full_path(some.reverse_mapa[0], some.reverse_mapa[2]))
+print(some.get_dist(some.reverse_mapa[0], some.reverse_mapa[2]))
