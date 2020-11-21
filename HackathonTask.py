@@ -27,3 +27,24 @@ def rider_class(rider, thr1=0.28, thr2=0.17, thr3=0.23):
         return 2
     return 3
 
+
+def get_long_dists(drivers):
+    dists = np.zeros(drivers.shape[0], dtype='int')
+    for i, row in drivers.iterrows():
+        x = float(row['lat'])
+        y = float(row['lon'])
+        if haversine((x, y), (cx, cy)) > 10:
+            dists[i] = 1
+    return dists
+
+
+def driver_features(drivers):
+    classes = [rider_class(drivers['driverID'][i]) for i in range(drivers.shape[0])]
+    away = get_long_dists(drivers)
+    drivers['away'] = away
+    drivers['class'] = classes
+    return drivers
+
+
+drivers = driver_features(pd.read_csv('drivers.csv'))
+orders = clear_dataset(pd.read_csv('orders.csv'))
