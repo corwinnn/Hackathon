@@ -11,7 +11,7 @@ def clear_dataset(orders):
     return orders
 
 
-def rider_class(rider, thr1=0.28, thr2=0.17, thr3=0.23):
+def rider_class(rider, orders, thr1=0.28, thr2=0.17, thr3=0.23):
     grades = orders[orders['driverID'] == rider]['rideRating'].to_numpy()
     nrides = grades.shape[0]
     grades = [(grades == i).mean() for i in [-1, 1, 2, 3, 4, 5]]
@@ -40,13 +40,28 @@ def get_long_dists(drivers):
     return dists
 
 
-def driver_features(drivers):
-    classes = [rider_class(drivers['driverID'][i]) for i in range(drivers.shape[0])]
+def get_angle(c, p):
+    if c[0] > p[0]:
+        if c[1] > p[1]:
+            return 1
+        return 2
+    if c[1] > p[1]:
+        return 3
+    return 4
+
+
+def driver_features(drivers, orders):
+    classes = [rider_class(drivers['driverID'][i], orders) for i in range(drivers.shape[0])]
     away = get_long_dists(drivers)
     drivers['away'] = away
     drivers['class'] = classes
+
+    cx = orders.dropoff_lat.mean()
+    cy = orders.dropoff_lon.mean()
+    drivers['angle'] = [get_angle((cx, cy), (drivers['lat'][i], drivers['lon'][i])) for i in range(drivers.shape[0])]
     return drivers
 
 
-drivers = driver_features(pd.read_csv('drivers.csv'))
 orders = clear_dataset(pd.read_csv('orders.csv'))
+drivers = driver_features(pd.read_csv('drivers.csv'), orders)
+
