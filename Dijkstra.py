@@ -101,31 +101,54 @@ class Dijkstra:
         cur_p = -1
         for i in self.edges:
             d = self.distance(point, i)
-            t = d
             if d < cur_min:
                 cur_min = d
                 cur_p = i
-        return cur_p, t, d
+        return cur_p, cur_min, cur_min
 
     def get_dist(self, point, another_point, cur_time=12 * 60):
         if point in self.mapa:
             return self._get_dist(point, another_point, cur_time)
         else:
             po, t, d = self.get_nearest_point(point)
-            ans1, ans2 = self._get_dist(po, another_point, cur_time)
-            return ans1 + d, ans2 + t
+            apo, at, ad = self.get_nearest_point(another_point)
+            ans1, ans2 = self._get_dist(po, apo, cur_time)
+            return ans1 + d + ad, ans2 + t + at
 
     def get_full_path(self, point, another_point, cur_time=12 * 60):
         if point in self.mapa:
             return self._get_full_path(point, another_point, cur_time)
         else:
-            po, t, d = self.get_nearest_point(point)
-            ans1 = self._get_full_path(po, another_point, cur_time)
-            return [point] + ans1[0], [point] + ans1[1]
+            if another_point in self.mapa:
+                po, t, d = self.get_nearest_point(point)
+                ans1 = self._get_full_path(po, another_point, cur_time)
+                return [point] + ans1[0], [point] + ans1[1]
+            else:
+                po, t, d = self.get_nearest_point(point)
+                apo, at, ad = self.get_nearest_point(another_point)
+                ans1 = self._get_full_path(po, apo, cur_time)
+                return [point] + ans1[0] + [another_point], [point] + ans1[1] + [
+                    another_point
+                ]
+
+    def choose_taxi(self, destination_point, arr):
+        cur_min = 10 ** 9 + 1
+        cur_taxi_driver = -1
+        for i in arr:
+            x, y = self.get_dist(i, destination_point)
+            if cur_min > x:
+                cur_min = x
+                cur_taxi_driver = i
+        return cur_taxi_driver
 
 
 some = Dijkstra()
 
 print(some.get_full_path((49.7996, 22.95196), some.reverse_mapa[2]))
-print(some.get_full_path((49.7994, 22.95196), some.reverse_mapa[2]))
 print(some.get_dist((49.7994, 22.95196), some.reverse_mapa[2]))
+print(
+    some.choose_taxi(
+        (49.7996, 22.95196),
+        [(49.7994, 22.95196), (49.7999, 22.95196), (49.7800, 22.95196)],
+    )
+)
