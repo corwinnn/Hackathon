@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import collections
 from collections import defaultdict
-
+from haversine import haversine
 
 def get_rider_weekdays(rider, orders):
     times = orders[orders['driverID'] == rider].pickupTime
