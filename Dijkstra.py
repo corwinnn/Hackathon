@@ -19,7 +19,7 @@ class Dijkstra:
         self.half_t_graph = self.get_time_graph(True)
 
     def prep(self):
-
+        # O(n*logn)
         i = 0
         for v in self.root.findall("N"):
 
@@ -54,6 +54,7 @@ class Dijkstra:
         return (haversine(x, y[0]) / float(y[2][1])) * 60
 
     def get_dist_graph(self):
+        # O(m*logn)
         graph = dijkstra.Graph()
 
         for i in self.edges:
@@ -63,6 +64,7 @@ class Dijkstra:
         return graph
 
     def get_time_graph(self, time=False):
+        # O(m*logn)
         graph = dijkstra.Graph()
 
         for i in self.edges:
@@ -74,6 +76,7 @@ class Dijkstra:
         return graph
 
     def _get_dist(self, point, another_point, cur_time=12 * 60, easy=False):
+        # O(n*logn)
         if easy:
             dijk_d = dijkstra.DijkstraSPF(self.d_graph, point)
             e = dijk_d.get_distance(another_point)
@@ -90,6 +93,7 @@ class Dijkstra:
         return (dijk_d.get_distance(another_point), timie)
 
     def _get_full_path(self, point, another_point, cur_time=12 * 60):
+        # O(n*logn)
         dijk_d = dijkstra.DijkstraSPF(self.d_graph, point)
         dijk_ft = dijkstra.DijkstraSPF(self.full_t_graph, point)
         dijk_ht = dijkstra.DijkstraSPF(self.half_t_graph, point)
@@ -101,7 +105,7 @@ class Dijkstra:
         return (dijk_d.get_path(another_point), timie)
 
     def get_nearest_point(self, point):
-        # TODO Add bin. search optimisation with edges sort
+        # O(n)
         cur_min = 10 ** 9 + 1
         cur_p = -1
         for i in self.edges:
@@ -112,6 +116,7 @@ class Dijkstra:
         return cur_p, cur_min, cur_min
 
     def get_dist(self, point, another_point, cur_time=12 * 60, easy=False):
+        # O(n*logn)
         if point in self.mapa:
             return self._get_dist(point, another_point, cur_time)
         else:
@@ -121,6 +126,7 @@ class Dijkstra:
             return ans1 + d + ad, ans2 + t + at
 
     def get_full_path(self, point, another_point, cur_time=12 * 60):
+        # O(n*logn)
         if point in self.mapa:
             return self._get_full_path(point, another_point, cur_time)
         else:
@@ -137,6 +143,7 @@ class Dijkstra:
                 ]
 
     def choose_taxi(self, destination_point, arr):
+        # O(k*n*logn)
         cur_min = 10 ** 9 + 1
         cur_taxi_driver = -1
         for i in arr:
@@ -149,10 +156,8 @@ class Dijkstra:
 
 def get_rate(orders, d_to_p):
     rate = dict()
-    koko = 0
     for i in orders["driverID"]:
         if rate.get(i) is None:
-            koko += 1
             ans = 0
             key = 0
             for j in d_to_p[i]:
@@ -161,15 +166,11 @@ def get_rate(orders, d_to_p):
                     dist1, dist2 = some.get_dist((j[2], j[3]), (j[4], j[5]), j[0], True)
                     dist1 = dist1 / ((j[1] - j[0]) / 60)
                     ans += dist1
-                if key == 2:
-                    break
             if key != 0:
                 ans /= key
                 rate[i] = ans
     return rate
 
-
-print(get_rate())
 
 some = Dijkstra()
 
