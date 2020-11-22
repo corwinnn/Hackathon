@@ -73,14 +73,19 @@ class Dijkstra:
 
         return graph
 
-    def _get_dist(self, point, another_point, cur_time=12 * 60):
+    def _get_dist(self, point, another_point, cur_time=12 * 60, easy=False):
+        if easy:
+            dijk_d = dijkstra.DijkstraSPF(self.d_graph, point)
+            e = dijk_d.get_distance(another_point)
+            return (e, e)
         dijk_d = dijkstra.DijkstraSPF(self.d_graph, point)
-        dijk_ft = dijkstra.DijkstraSPF(self.full_t_graph, point)
-        dijk_ht = dijkstra.DijkstraSPF(self.half_t_graph, point)
+
         timie = 0
         if cur_time < 8 * 60 or cur_time > 20 * 60:
+            dijk_ht = dijkstra.DijkstraSPF(self.half_t_graph, point)
             timie = dijk_ht.get_distance(another_point)
         else:
+            dijk_ft = dijkstra.DijkstraSPF(self.full_t_graph, point)
             timie = dijk_ft.get_distance(another_point)
         return (dijk_d.get_distance(another_point), timie)
 
@@ -106,13 +111,13 @@ class Dijkstra:
                 cur_p = i
         return cur_p, cur_min, cur_min
 
-    def get_dist(self, point, another_point, cur_time=12 * 60):
+    def get_dist(self, point, another_point, cur_time=12 * 60, easy=False):
         if point in self.mapa:
             return self._get_dist(point, another_point, cur_time)
         else:
             po, t, d = self.get_nearest_point(point)
             apo, at, ad = self.get_nearest_point(another_point)
-            ans1, ans2 = self._get_dist(po, apo, cur_time)
+            ans1, ans2 = self._get_dist(po, apo, cur_time, easy)
             return ans1 + d + ad, ans2 + t + at
 
     def get_full_path(self, point, another_point, cur_time=12 * 60):
@@ -141,6 +146,30 @@ class Dijkstra:
                 cur_taxi_driver = i
         return cur_taxi_driver
 
+
+def get_rate(orders, d_to_p):
+    rate = dict()
+    koko = 0
+    for i in orders["driverID"]:
+        if rate.get(i) is None:
+            koko += 1
+            ans = 0
+            key = 0
+            for j in d_to_p[i]:
+                if j[1] != j[0]:
+                    key += 1
+                    dist1, dist2 = some.get_dist((j[2], j[3]), (j[4], j[5]), j[0], True)
+                    dist1 = dist1 / ((j[1] - j[0]) / 60)
+                    ans += dist1
+                if key == 2:
+                    break
+            if key != 0:
+                ans /= key
+                rate[i] = ans
+    return rate
+
+
+print(get_rate())
 
 some = Dijkstra()
 
