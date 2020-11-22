@@ -5,6 +5,7 @@ import collections
 from collections import defaultdict
 from haversine import haversine
 
+
 def get_rider_weekdays(rider, orders):
     times = orders[orders['driverID'] == rider].pickupTime
     return np.array([t.weekday() for t in times])
@@ -58,9 +59,6 @@ def get_best_weekdays_for_away_drivers(drivers, orders):
         week_best_days[best_days[d][1][1]] += 1
 
     n = (away_drivers.shape[0] * 2) // 7
-
-    plt.bar(range(7), week_best_days)
-    plt.show()
 
     step = 0
     while min(week_best_days) < n - 2:
@@ -155,12 +153,83 @@ def driver_features(drivers, orders):
     away = get_long_dists(drivers)
     drivers['away'] = away
     drivers['class'] = classes
-    driver['weekday1'] = -1
-    driver['weekday2'] = -1
+    drivers['weekday1'] = -1
+    drivers['weekday2'] = -1
     cx = orders.dropoff_lat.mean()
     cy = orders.dropoff_lon.mean()
     drivers['angle'] = [get_angle((cx, cy), (drivers['lat'][i], drivers['lon'][i])) for i in range(drivers.shape[0])]
+
+    driver_days = get_driver_days(orders)
+    drivers['current_weekday1'] = -1
+    drivers['current_weekday2'] = -1
+    for _, row in drivers.iterrows():
+        row['current_weekday1'] = min(driver_days[row.driverID])
+        row['current_weekday2'] = max(driver_days[row.driverID])
+
     return drivers
+
+
+def get_free_weekday_slots(near_drivers):
+    # sec - среднее количество заказов по дням недели
+    sec = [4781.807692307692, 4919.192307692308, 4838.7307692307695, 5069.653846153846, 5582.0, 5475.185185185185, 4698.481481481482]
+    free_slots = len(near_drivers) * 2
+    aveps = np.sum(sec) / free_slots
+    slots = [free_slots / 7] * 7
+
+    for i in range(len(sec)):
+        val = (sec[i] - np.mean(sec)) / aveps
+        slots[i] -= val
+        slots[i] = int(slots[i]) + 1
+
+    return slots
+
+
+def initial_distribution(near_drivers, driver_mean):
+    res = [0] * 7
+    distr = defaultdict(lambda: [0, 0])
+    for _, row in near_drivers.iterrows():
+        els = np.argsort(driver_mean[row.driverID])[:2]
+        res[els[0]] += 1
+        res[els[1]] += 1
+        distr[row.driverID] = els
+    return res, distr
+
+
+def get_near_drivers_distribution(drivers, orders):
+    near_drivers = drivers[drivers.away == 0]
+    second_class = near_drivers[near_drivers['class'] == 2]
+    gdm = get_driver_mean(orders)
+    step = 0
+    slots = get_free_weekday_slots(near_drivers)
+    ptr, driver_distr = initial_distribution(near_drivers, gdm)
+    while any([ptr[i] > slots[i] for i in range(7)]):
+        step += 1
+        change = None
+        best_loss = 100000
+        for i in range(7):
+            if ptr[i] > slots[i]:
+                for _, d in second_class.iterrows():
+                    ind = driver_distr[d.driverID]
+                    if i in ind:
+                        for j in range(7):
+                            if ptr[j] < slots[j] and j not in ind:
+                                loss = gdm[2][i] - gdm[2][j]
+                                if loss < best_loss:
+                                    best_loss = loss
+                                    change = (i, j, d.driverID)
+
+        if change is None:
+            break
+
+        ptr[change[0]] -= 1
+        ptr[change[1]] += 1
+        ind = driver_distr[change[2]]
+
+        if ind[0] == change[0]:
+            ind[0] = change[1]
+        else:
+            ind[1] = change[1]
+    return driver_distr
 
 
 orders = clear_dataset(pd.read_csv('orders.csv'))
