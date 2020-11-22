@@ -162,9 +162,10 @@ def driver_features(drivers, orders):
     driver_days = get_driver_days(orders)
     drivers['current_weekday1'] = -1
     drivers['current_weekday2'] = -1
-    for _, row in drivers.iterrows():
-        row['current_weekday1'] = min(driver_days[row.driverID])
-        row['current_weekday2'] = max(driver_days[row.driverID])
+    for i in range(drivers.shape[0]):
+        id = drivers.iloc[i].driverID
+        drivers.loc[i, 'current_weekday1'] = min(driver_days[id])
+        drivers.loc[i, 'current_weekday2'] = max(driver_days[id])
 
     return drivers
 
@@ -195,7 +196,7 @@ def initial_distribution(near_drivers, driver_mean):
     return res, distr
 
 
-def get_near_drivers_distribution(drivers, orders):
+def set_near_drivers_weekdays(drivers, orders):
     near_drivers = drivers[drivers.away == 0]
     second_class = near_drivers[near_drivers['class'] == 2]
     gdm = get_driver_mean(orders)
@@ -229,11 +230,15 @@ def get_near_drivers_distribution(drivers, orders):
             ind[0] = change[1]
         else:
             ind[1] = change[1]
+    for d in near_drivers.driverID.to_numpy():
+        drivers.loc[drivers.driverID == d, 'weekday1'] = min(driver_distr[d])
+        drivers.loc[drivers.driverID == d, 'weekday2'] = max(driver_distr[d])
     return driver_distr
 
 
 orders = clear_dataset(pd.read_csv('orders.csv'))
 drivers = driver_features(pd.read_csv('drivers.csv'), orders)
 set_best_weekdays_for_away_drivers(drivers, orders)
+set_near_drivers_weekdays(drivers, orders)
 
 print(drivers.head())
