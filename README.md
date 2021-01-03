@@ -1,5 +1,5 @@
 # Novmbr.Hack 2020
 
-Это репозиторий для решения задачи "Graph optimization" команды **Distrust Level**.
+Solution of Graph optimization task, **Distrust Level** team, 1st place.
 
-Сайт хакатона: https://sites.google.com/view/novmbr-hack-20/головна
+https://sites.google.com/view/novmbr-hack-20/головна
